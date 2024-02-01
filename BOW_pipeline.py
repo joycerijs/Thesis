@@ -1,5 +1,5 @@
 import pandas as pd
-import nltk
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.corpus import stopwords
 from nltk.stem.snowball import SnowballStemmer
@@ -10,6 +10,17 @@ from sklearn import model_selection
 from statistics import mean
 import numpy as np
 from scipy.stats import mannwhitneyu
+from scipy import stats
+import matplotlib.pyplot as plt
+from Train_test_model import statistics
+from Train_test_model import cross_val_stat
+from Train_test_model import baseline
+from Train_test_model import characteristics_text
+from Train_test_model import pipeline_model
+from Train_test_model import mean_ROC_curves
+from Train_test_model import calculate_lc
+from Train_test_model import plot_learning_curve
+from sklearn.ensemble import GradientBoostingClassifier
 
 
 def tokenize_and_stem(text):
@@ -138,125 +149,36 @@ def process_txt_files(input_directory):
     return all_text_content, file_names
 
 
-def statistics(GHZ_data, VVT_data, train_data):
-    '''In deze functie worden alle variabelen in de gegeven files met elkaar vergeleken middels Student's t-test.
-    De variabelen die significant van elkaar verschillen (p<0.05) worden in een dataframe gezet met gemiddelde,
-    standaard deviatie en p-waarde. Deze dataframe is de output van de functie'''
-    df_p = pd.DataFrame({'Features': GHZ_data.keys()})
-    for key in GHZ_data.keys():
-        # Chi square binair
-        # _, p, _, _ = chi2_contingency(pd.crosstab(train_data['Label'], train_data[key]))
-        
-        # Mann Whitney U TD-IDF
-        _, p = mannwhitneyu(GHZ_data[key], VVT_data[key])
-
-        df_p.loc[df_p['Features'] == key, 'P-value'] = p
-        mean_VVT = np.round(VVT_data[key].mean(), decimals=2)
-        std_VVT = np.round(VVT_data[key].std(), decimals=2)
-        mean_GHZ = np.round(GHZ_data[key].mean(), decimals=2)
-        std_GHZ = np.round(GHZ_data[key].std(), decimals=2)
-        df_p.loc[df_p['Features'] == key, 'Mean VVT'] = mean_VVT
-        df_p.loc[df_p['Features'] == key, 'Std VVT'] = std_VVT
-        df_p.loc[df_p['Features'] == key, 'Mean GHZ'] = mean_GHZ
-        df_p.loc[df_p['Features'] == key, 'Std GHZ'] = std_GHZ
-    df_p_sorted = df_p.sort_values(by=['P-value'])
-    df_p_sorted['Rank'] = range(1, len(df_p_sorted)+1)    # Rank the features
-    df_p_sorted['Significance level'] = 0.05/(len(df_p_sorted)+1-df_p_sorted['Rank'])    # Calculate the significance level per feature
-    df_p_sorted['Significant'] = np.where(df_p_sorted['P-value'] < df_p_sorted['Significance level'], 'Yes', 'No')
-    df_p_sign = df_p_sorted.loc[df_p_sorted['Significant'] == 'Yes']
-    df_p_for_table = df_p_sign.drop(['Rank', 'Significant'], axis=1)
-    return df_p_for_table
-
-
-def cross_val_stat(cv_dataframe, cv, dict):
-    for i, (train_index, _) in enumerate(cv.split(cv_dataframe, labels)):
-        train_data = cv_dataframe.iloc[train_index]
-        grouped = train_data.groupby('Label')
-        df_GHZ = grouped.get_group(1)
-        df_GHZ.drop(['Label'], axis=1)
-        df_VVT = grouped.get_group(0)
-        df_VVT.drop(['Label'], axis=1)
-        df_p_for_table = statistics(df_GHZ, df_VVT, train_data)
-        dict[f'df_{i}'] = df_p_for_table
-
-    feature_totals = {}
-    feature_counts = {}
-
-    # Loop door elke dataframe in de dictionary
-    for df in dict.values():
-        for _, row in df.iterrows():
-            feature = row['Features']
-            if feature in feature_totals:
-                feature_totals[feature] = {col: feature_totals[feature].get(col, 0) + row[col] for col in df.columns[1:]}
-                feature_counts[feature] += 1
-            else:
-                feature_totals[feature] = {col: row[col] for col in df.columns[1:]}
-                feature_counts[feature] = 1
-    result_list = []
-
-    # Vul de resultaten dataframe met gemiddelde waarden
-    for feature, total in feature_totals.items():
-        count = feature_counts[feature]
-        if count > 5:
-            avg_values = {col: total[col] / count for col in total}
-            avg_values['Features'] = feature
-            result_list.append(avg_values)
-    result_dataframe = pd.DataFrame(result_list)[['Features'] + [col for col in result_list[0] if col != 'Features']]
-    return result_dataframe
-
-
-def characteristics_text(input_directory):
-    '''Aantal tokens per bestand en per client berekenen. en mediaan aantal bestanden per client.'''
-    num_files_per_client = []
-
-    for _, _, files in os.walk(input_directory):
-        num_files = len(files)
-        num_files_per_client.append(num_files)
-
-    num_files_per_client.pop(0)  # eerste mapje is 0
-    num_files_per_client.sort()
-
-    len_filtered_tokens = []
-    # files = glob.glob(os.path.join(input_directory, '**/*'))    #voor losse files van de clienten
-    files = os.listdir(input_directory)     # voor de merged client files
-    for file_name in files:
-        file_path = os.path.join(input_directory, file_name)
-        if file_name.endswith(".txt") and os.path.isfile(file_path):
-            with open(file_path, "r", encoding="utf-8") as file:
-                    text = file.read()
-
-            tokens = [word for sent in nltk.sent_tokenize(text) for word in nltk.word_tokenize(sent)]
-            filtered_tokens = []
-
-            # filter out any tokens not containing letters (e.g., numeric tokens, raw punctuation)
-            for token in tokens:
-                if re.fullmatch('[a-zA-Z]+', token): #Hier worden alleen tokens meegnomen waar alleen letters in zitten. getallen worden weggefilterd.
-                    filtered_tokens.append(token)
-            len_filtered_tokens.append(len(filtered_tokens))
-    return num_files_per_client, len_filtered_tokens
-
 # Define input paths
-input_directory_GHZ = '/GHZ_a'
-input_directory_VVT = '/VVT_a'
+# input_directory_GHZ = '/GHZ_a'
+# input_directory_VVT = '/VVT_a'
 
 # Merge all files per client in one txt file.
-merged_path = '/all_merged' # het pad waar alle merged bestanden terecht komen.
-merge_txt_files(input_directory_GHZ, merged_path)
-merge_txt_files(input_directory_VVT, merged_path)
+# merged_path = '/all_merged' # Path where all merged files will be put in.
+# merge_txt_files(input_directory_GHZ, merged_path)
+# merge_txt_files(input_directory_VVT, merged_path)
+merged_path = 'F:/Documenten/Universiteit/Master_TM+_commissies/Jaar 3/Afstuderen/Thesis/OneDrive_2023-11-27/all_merged'
+
+# Load files with age and gender of clients and calculate statistics
+# baseline_VVT = pd.read_excel('/overzicht-clienten-VVT-bewerkt.xlsx')
+# baseline_GHZ = pd.read_excel('/overzicht-clienten-GHZ-bewerkt.xlsx')
+# baseline_combined = pd.read_excel('/overzicht-clienten-beiden-bewerkt.xlsx')
+# df_characteristics = baseline(baseline_VVT, baseline_GHZ, baseline_combined)
 
 # Calculate amount of files and words per client
-input_directory_GHZ_merged = '/GHZ_merged'
-input_directory_VVT_merged = '/VVT_merged'
-num_files_per_client_GHZ, _ = characteristics_text(input_directory_GHZ)
-num_files_per_client_VVT, _ = characteristics_text(input_directory_VVT)
-_, len_filtered_tokens_GHZ = characteristics_text(input_directory_GHZ_merged)
-_, len_filtered_tokens_VVT = characteristics_text(input_directory_VVT_merged)
-X_GHZ = [i for i in num_files_per_client_GHZ if i != 0]
-median_files_GHZ = np.median(X_GHZ)
-X_VVT = [i for i in num_files_per_client_VVT if i != 0]
-median_files_VVT = np.median(X_VVT)
-_, p_files = mannwhitneyu(num_files_per_client_GHZ, num_files_per_client_VVT)
-_, p_words = mannwhitneyu(len_filtered_tokens_GHZ, len_filtered_tokens_VVT)
+# input_directory_GHZ_merged = '/GHZ_merged'
+# input_directory_VVT_merged = '/VVT_merged'
+# num_files_per_client_GHZ, _ = characteristics_text(input_directory_GHZ)
+# num_files_per_client_VVT, _ = characteristics_text(input_directory_VVT)
+# _, len_filtered_tokens_GHZ = characteristics_text(input_directory_GHZ_merged)
+# _, len_filtered_tokens_VVT = characteristics_text(input_directory_VVT_merged)
+# X_GHZ = [i for i in num_files_per_client_GHZ if i != 0]
+# median_files_GHZ = np.median(X_GHZ)
+# X_VVT = [i for i in num_files_per_client_VVT if i != 0]
+# median_files_VVT = np.median(X_VVT)
+# _, p_files = mannwhitneyu(num_files_per_client_GHZ, num_files_per_client_VVT)
+# _, p_words = mannwhitneyu(len_filtered_tokens_GHZ, len_filtered_tokens_VVT)
+#### hier ook nog een nette dataframe van maken zoals baseline
 
 # Create lists to store the text content and file names for further processing
 all_text_content, file_names = process_txt_files(merged_path)
@@ -269,12 +191,11 @@ for file in file_names:
     if 'GHZ' in file:
         labels.append(1)
 
-# Define stemmer, stopwords, crossvalidation and dictionaries
+# Define stemmer, stopwords, cross-validation and dictionary
 stemmer = SnowballStemmer('dutch')
 stopwords = stopwords.words('dutch') + ['filtered', 'naam', 'plaats', 'adres', 'land', 'email', 'postcode', 'phone', 'bsn', 'meneer', 'mr', 'mevrouw', 'mw']
 stemmed_stopwords = [stemmer.stem(word) for word in stopwords]
 cv = model_selection.StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
-dict_bin = {}
 dict_tfidf = {}
 
 # Calcuate TF-IDF features
@@ -284,5 +205,76 @@ cv_dataframe_tfidf = pd.DataFrame(Count_data_tfidf.toarray(), columns=tfidf.get_
 cv_dataframe_tfidf.insert(1, 'Label', labels)
 
 # Calculate significant features and save to Excel file for further examination
-sign_features_tfidf = cross_val_stat(cv_dataframe_tfidf, cv, dict_tfidf)
-sign_features_tfidf.to_excel('Sign_features_tfidf.xlsx')
+sign_features_tfidf = cross_val_stat(cv_dataframe_tfidf, labels, cv, dict_tfidf)
+# sign_features_tfidf.to_excel('Sign_features_tfidf.xlsx')
+
+# Unbiased significant words chosen
+unbiased_words = ['Label', 'emotionel', 'onrust', 'spanning', 'bos', 'rust', 'ontspann',
+                  'bril', 'ogen', 'zien', 'draagt', 'oren', 'hoort', 'gehor',
+                  'epilepsie', 'bloedonderzoek', 'licham', 'dochter', 'ouder', 'moeder',
+                  'vader','zus', 'broer', 'duidelijk', 'geboort', 'vermoed', 'onderzocht',
+                  'afgenom', 'prat', 'sprak']
+
+# # For showing full words mapped to stems of unbiased words
+# vocabulary_list_dupl = vocabulary(all_text_content)
+# vocabulary_list = vocabulary_list_dupl.drop_duplicates()
+
+# for word in unbiased_words:
+#     if word in vocabulary_list.index:
+#         linked_words_total = []
+#         linked_word = vocabulary_list.loc[word, 'words']
+#         if linked_word not in linked_words_total:
+#             linked_words_total.append(linked_word)
+#         print(f'stem: {word}, full word: {linked_words_total}')
+
+cv_unbiased_stem = cv_dataframe_tfidf[unbiased_words]
+
+tprs = []
+aucs = []
+_, axis = plt.subplots()
+tns = []
+tps = []
+fns = []
+fps = []
+spec = []
+sens = []
+accuracy = []
+train_scores_mean_all= []
+test_scores_mean_all= []
+
+for i, (train_index, test_index) in enumerate(cv.split(cv_unbiased_stem, labels)):
+    train_data_ = cv_unbiased_stem.iloc[train_index]
+    train_data = train_data_.drop(['Label'], axis=1)
+    test_data_ = cv_unbiased_stem.iloc[test_index]
+    test_data = test_data_.drop(['Label'], axis=1)
+
+    train_label = cv_unbiased_stem['Label'].iloc[train_index]
+    test_label = cv_unbiased_stem['Label'].iloc[test_index]
+
+    clf_XGB = GradientBoostingClassifier()
+    tprs, aucs, tns, tps, fps, fns, spec, sens, accuracy = \
+        pipeline_model(train_data, train_label, test_data, test_label, i, clf_XGB, tprs, aucs, tns, tps, fps, fns,
+                        spec, sens, accuracy, axis)
+    
+    # train_sizes, train_scores_mean, test_scores_mean = calculate_lc(clf_XGB, train_data, train_label, cv)
+    # train_scores_mean_all.append(list(train_scores_mean))
+    # test_scores_mean_all.append(list(test_scores_mean))
+
+# mean_ROC_curves(tprs, aucs, axis)
+# plt.show()
+# plt.close()
+
+dict_scores = {'Model scores XGB': [f'{np.round(mean(aucs), decimals=2)} ± {np.round(np.std(aucs), decimals=2)}',
+                                    f'{np.round(mean(accuracy), decimals=2)} ± {np.round(np.std(accuracy), decimals=2)}',
+                                    f'{np.round(mean(sens), decimals=2)} ± {np.round(np.std(sens), decimals=2)}',
+                                    f'{np.round(mean(spec), decimals=2)} ± {np.round(np.std(spec), decimals=2)}',
+                                    ]}
+
+df_scores = pd.DataFrame.from_dict(dict_scores, orient='index', columns=['AUC', 'Accuracy', 'Sensitivity',
+                                                                            'Specificity'])
+print(df_scores)
+
+# fig, ax = plt.subplots()
+# title = 'Learning curve TF-IDF'
+# plot_learning_curve(ax, title, train_sizes, train_scores_mean_all, test_scores_mean_all)
+# plt.show()
