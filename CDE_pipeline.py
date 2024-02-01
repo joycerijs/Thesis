@@ -1,37 +1,21 @@
-import re
-import os
 import pandas as pd
-from sklearn import metrics
-from sklearn.metrics import confusion_matrix
 from sklearn import model_selection
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from statistics import mean
 import numpy as np
-from scipy import stats
-from sklearn.metrics import confusion_matrix
-from scipy.stats import chi2_contingency
-from scipy.stats import mannwhitneyu
 from sklearn.model_selection import learning_curve
 import matplotlib.pyplot as plt
-from sklearn.model_selection import ShuffleSplit
-from sklearn.metrics import RocCurveDisplay, auc
-from matplotlib import pyplot
-from sklearn.model_selection import LeaveOneOut
-from sklearn.model_selection import LearningCurveDisplay
 from Train_test_model import pipeline_model
 from Train_test_model import mean_ROC_curves
 from Train_test_model import calculate_lc
 from Train_test_model import plot_learning_curve
-import math
 
-print('start')
 
 # Load the UMLS features obtained from Medspacy
-# df_GHZ = pd.read_csv('/GHZ_features_UMLS.csv', index_col=0)
-# df_VVT = pd.read_csv('/VVT_features_UMLS.csv', index_col=0)
-df_GHZ = pd.read_csv('F:/Documenten/Universiteit/Master_TM+_commissies/Jaar 3/Afstuderen/Thesis/MedSpacy/run_GHZ_1312_features_UMLS.csv', index_col=0)
-df_VVT = pd.read_csv('F:/Documenten/Universiteit/Master_TM+_commissies/Jaar 3/Afstuderen/Thesis/MedSpacy/run_VVT_1312_features_UMLS.csv', index_col=0)
+df_GHZ = pd.read_csv('/GHZ_features_UMLS.csv', index_col=0)
+df_VVT = pd.read_csv('/VVT_features_UMLS.csv', index_col=0)
+# df_GHZ = pd.read_csv('F:/Documenten/Universiteit/Master_TM+_commissies/Jaar 3/Afstuderen/Thesis/MedSpacy/run_GHZ_1312_features_UMLS.csv', index_col=0)
+# df_VVT = pd.read_csv('F:/Documenten/Universiteit/Master_TM+_commissies/Jaar 3/Afstuderen/Thesis/MedSpacy/run_VVT_1312_features_UMLS.csv', index_col=0)
 df_GHZ['Label'] = 1
 df_VVT['Label'] = 0
 
