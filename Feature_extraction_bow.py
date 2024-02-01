@@ -263,7 +263,6 @@ all_text_content, file_names = process_txt_files(merged_path)
 
 # Define ID/ no ID labels
 labels = []
-
 for file in file_names:
     if 'VVT' in file:
         labels.append(0)
@@ -287,7 +286,3 @@ cv_dataframe_tfidf.insert(1, 'Label', labels)
 # Calculate significant features and save to Excel file for further examination
 sign_features_tfidf = cross_val_stat(cv_dataframe_tfidf, cv, dict_tfidf)
 sign_features_tfidf.to_excel('Sign_features_tfidf.xlsx')
-
-
-
-
