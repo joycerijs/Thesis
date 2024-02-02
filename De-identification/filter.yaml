@@ -7,8 +7,8 @@ numbers_to_zero: False
 
 # Datasets to use
 data_directory: 'datasets'
-firstnames: 'first_names_split_goede.csv'
-lastnames: 'last_names_split_goede.csv'
+firstnames: 'firstnames.csv'
+lastnames: 'lastnames.csv'
 places: 'places.csv'
 countries: 'countries.csv'
-streets: 'streets_Nederland.csv'
+streets: 'streets.csv'

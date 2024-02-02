@@ -1,6 +1,8 @@
-'''Dit script kan gebruikt worden om de volgende bestanden te anonimiseren: PDF, doc, docx, odt, txt, png, tiff, jpg, jpeg.
-Voornamen, achternamen, plaatsnamen, straatnamen, landen, instellingsnamen, telefoonnummers, mailadressen, BSN-nummers
-en postcodes worden weggefilterd.'''
+'''This script can be used to extract and de-identify text of the following files: PDF, doc, docx, odt, txt, png, tiff, jpg, jpeg. 
+First names, last names, place names, street names, countries, institution names, phone numbers, email addresses, 
+social security numbers, and postal codes will be filtered out. 
+NOTE: Novicare specific client names and institution names were added to the lists in the IDA project, but due to
+privacy reasons these are not included in the datasets of this repository.'''
 
 import re
 import os
@@ -23,6 +25,9 @@ from odf.opendocument import load
 
 
 class PrivacyFilter:
+    '''This class was largely adopted from L. van der Meulen. The functions for removing
+     phone-numbers and social security numbers were added.
+    '''
 
     def __init__(self):
         self.keyword_processor = KeywordProcessor(case_sensitive=True)
@@ -62,7 +67,6 @@ class PrivacyFilter:
         return items
 
     def initialize_from_file(self, filename):
-        # Hiermee worden instellingen van de filter gelezen.
         with open(filename) as file:
             data = yaml.load(file, Loader=yaml.FullLoader)
 
@@ -93,12 +97,12 @@ class PrivacyFilter:
 
         if not fields:
             fields = {
-                os.path.join('datasets', 'first_names_split_goede.csv'): {"replacement": "<NAAM>",
+                os.path.join('datasets', 'firstnames.csv'): {"replacement": "<NAAM>",
                                                              "punctuation": None if nlp_filter else self._punctuation},
-                os.path.join('datasets', 'last_names_split_goede.csv'): {"replacement": "<NAAM>",
+                os.path.join('datasets', 'lastnames.csv'): {"replacement": "<NAAM>",
                                                             "punctuation": None if nlp_filter else self._punctuation},
                 os.path.join('datasets', 'places.csv'): {"replacement": "<PLAATS>", "punctuation": None},
-                os.path.join('datasets', 'streets_Nederland.csv'): {"replacement": "<ADRES>", "punctuation": None},
+                os.path.join('datasets', 'streets.csv'): {"replacement": "<ADRES>", "punctuation": None},
                 os.path.join('datasets', 'countries.csv'): {"replacement": "<LAND>", "punctuation": None},
             }
 
@@ -171,7 +175,7 @@ class PrivacyFilter:
 
     @staticmethod
     def cleanup_text(result):
-        # result = re.sub("<[A-Z _]+>", "<FILTERED>", result)    # deze commenten om <NAAM> te laten staan ipv <FILTERED>.
+        # result = re.sub("<[A-Z _]+>", "<FILTERED>", result)
         result = re.sub(" ([ ,.:;?!])", "\\1", result)
         result = re.sub(" +", " ", result)                          # remove multiple spaces
         result = re.sub("\n +", "\n", result)                       # remove space after newline
@@ -201,10 +205,12 @@ class PrivacyFilter:
 
 
 def filter_PDF(files_passed, input_file_path, output_file_path):
-    '''input: PDF'''
+    '''This function extracts text from PDF using the Tesseract-OCR and subsequently de-identifies the text.
+    De-identified text is saved in a txt file. If the PDF file was not processed, for example because it was
+    secured with a password, the filename was added to the list files_passed.'''
     pfilter = PrivacyFilter()
     pfilter.initialize_from_file('filter.yaml')
-    pytesseract.pytesseract.tesseract_cmd = r'F:/Documenten/Universiteit/Master_TM+_commissies/Jaar 3/Afstuderen/Thesis/Anonimiseren_data/Tesseract-OCR/tesseract.exe'
+    pytesseract.pytesseract.tesseract_cmd = r'/Tesseract-OCR/tesseract.exe'
     try:
         pdfReader = PyPDF2.PdfReader(input_file_path)
         totalPages = len(pdfReader.pages)
@@ -212,14 +218,12 @@ def filter_PDF(files_passed, input_file_path, output_file_path):
         if totalPages > 30:
             files_passed.append(input_file_path)
             return  # Sla over voor grote PDFs
-        pages = convert_from_path(input_file_path, 500, poppler_path=r'F:/Documenten/Universiteit/Master_TM+_commissies/Jaar 3/Afstuderen/Thesis/poppler-23.08.0/Library/bin')
+        pages = convert_from_path(input_file_path, 500, poppler_path=r'/poppler-23.08.0/Library/bin')
         extracted_text_all = ""
 
         for _, img in enumerate(pages):
             extracted_text = pytesseract.image_to_string(img, lang='nld')
             extracted_text_all += extracted_text
-
-        #extracted_text_processed = postprocess(extracted_text_all)
         anonymized_txt = pfilter.filter(extracted_text_all)
 
         with open(output_file_path, "w", encoding="utf-8") as txt_file:
@@ -231,14 +235,16 @@ def filter_PDF(files_passed, input_file_path, output_file_path):
 
 
 def filter_image(files_passed, input_file_path, output_file_path):
-    '''input: jpg, jpeg, png, tiff'''
+    '''This function extracts text from jpg, jpeg, png and tiff files using the Tesseract-OCR and 
+    subsequently de-identifies the text. De-identified text is saved in a txt file. 
+    If the image was not processed, for example because it was
+    secured with a password, the filename was added to the list files_passed.'''
     try:
         pfilter = PrivacyFilter()
         pfilter.initialize_from_file('filter.yaml')
         image = Image.open(input_file_path)
-        pytesseract.pytesseract.tesseract_cmd = r'F:/Documenten/Universiteit/Master_TM+_commissies/Jaar 3/Afstuderen/Thesis/Anonimiseren_data/Tesseract-OCR/tesseract.exe'
+        pytesseract.pytesseract.tesseract_cmd = r'/Tesseract-OCR/tesseract.exe'
         extracted_text = pytesseract.image_to_string(image, lang='nld')
-        #extracted_text_processed = postprocess(extracted_text)
         anonymized_txt = pfilter.filter(extracted_text)
 
         with open(output_file_path, "w", encoding="utf-8") as txt_file:
@@ -249,13 +255,16 @@ def filter_image(files_passed, input_file_path, output_file_path):
 
 
 def filter_word(files_passed, input_file_path, output_file_path):
-    '''input: doc of docx. Let op: voor gebruik van deze functie moet Java zijn gedownload.'''
+    '''This function extracts text from doc of docx files using Tika and 
+    subsequently de-identifies the text. De-identified text is saved in a txt file. 
+    If the document was not processed, for example because it was
+    secured with a password, the filename was added to the list files_passed.
+    In order to use this function, Java must be downloaded.'''
     try:
         pfilter = PrivacyFilter()
         pfilter.initialize_from_file('filter.yaml')
         parsed = parser.from_file(input_file_path)
         extracted_text = parsed['content']
-        # extracted_text_processed = postprocess(extracted_text)
         anonymized_txt = pfilter.filter(extracted_text)
 
         with open(output_file_path, "w", encoding="utf-8") as txt_file:
@@ -266,6 +275,10 @@ def filter_word(files_passed, input_file_path, output_file_path):
 
 
 def filter_odt(files_passed, input_file_path, output_file_path):
+    '''This function extracts text from odt files and 
+    subsequently de-identifies the text. De-identified text is saved in a txt file. 
+    If the document was not processed, for example because it was
+    secured with a password, the filename was added to the list files_passed.'''
     try:
         pfilter = PrivacyFilter()
         pfilter.initialize_from_file('filter.yaml')
@@ -274,7 +287,6 @@ def filter_odt(files_passed, input_file_path, output_file_path):
         for elem in text_doc.getElementsByType(text.P):
             text_content.append(teletype.extractText(elem))
         extracted_text = "\n".join(text_content)
-        #extracted_text_processed = postprocess(extracted_text)
         anonymized_txt = pfilter.filter(extracted_text)
         with open(output_file_path, "w", encoding="utf-8") as txt_file:
             txt_file.write(anonymized_txt)
@@ -284,11 +296,14 @@ def filter_odt(files_passed, input_file_path, output_file_path):
 
 
 def filter_txt(files_passed, input_file_path, output_file_path):
+    '''This function extracts text from odt files and 
+    subsequently de-identifies the text. De-identified text is saved in a txt file. 
+    If the document was not processed, for example because it was
+    secured with a password, the filename was added to the list files_passed.'''
     try:
         pfilter = PrivacyFilter()
         pfilter.initialize_from_file('filter.yaml')
         extracted_text = open(input_file_path, "r")
-        #extracted_text_processed = postprocess(extracted_text.read())
         anonymized_txt = pfilter.filter(extracted_text.read())
         with open(output_file_path, "w", encoding="utf-8") as txt_file:
             txt_file.write(anonymized_txt)
@@ -298,6 +313,8 @@ def filter_txt(files_passed, input_file_path, output_file_path):
 
 
 def create_txt_file_path(file_path_count, file_path, output_path):
+    '''This function creates paths for storing the extracted and de-identified texts based on the
+    file path count, original file path and the output path given.'''
     last_subfolder = os.path.basename(os.path.dirname(file_path))
     file_name = os.path.basename(file_path)
     txt_name = f'{file_path_count}{os.path.splitext(file_name)[1]}_a.txt'
@@ -310,6 +327,9 @@ def create_txt_file_path(file_path_count, file_path, output_path):
 
 
 def process_file(file_path_count, file_path, output_path, files_passed, progress_bar):
+    '''With this function, text extraction and de-identification of
+    PDF, doc, docx, odt, txt, png, jpg, jpeg, and tiff files can be performed.
+    '''
     if file_path.endswith('.pdf'):
         txt_file_path = create_txt_file_path(file_path_count, file_path, output_path)
         filter_PDF(files_passed, file_path, txt_file_path)
@@ -348,6 +368,7 @@ def main():
     # output_path = '/VVT_a'    # Let op: er moet een mapje 'VVT_a' zijn aangemaakt
     # files_passed_txt = open('files_passed.txt', 'w')
 
+    # Extract files from zip files
     zip_files = glob.glob(os.path.join(folder_path, '**/*.zip'), recursive=True)
     for zip_file in zip_files:
         zip_dir = os.path.dirname(zip_file)
@@ -356,15 +377,18 @@ def main():
 
     files = glob.glob(os.path.join(folder_path, '**/*'))
 
+    # Initialize progress bar
     progress_bar = tqdm(total=len(files), unit="file")
     file_path_count = 0
     files_passed = []
 
+    # Process files
     for file_path in files:
         file_path_count += 1
         files_passed, progress_bar = process_file(file_path_count, file_path, output_path, files_passed, progress_bar)
     progress_bar.close()
 
+    # Write un-processed to files_passed
     for file in files_passed:
         files_passed_txt.write(file+"\n")
     files_passed_txt.close()
