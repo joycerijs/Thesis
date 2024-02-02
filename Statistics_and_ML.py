@@ -85,7 +85,6 @@ def statistics(GHZ_data, VVT_data, feature_type, train_data):
     for key in GHZ_data.keys():
         if feature_type == 'Clinical concepts':
             _, p, _, _ = chi2_contingency(pd.crosstab(train_data['Label'], train_data[key]))
-            print('yyes')
         
         if feature_type == 'TF-IDF':
             _, p = mannwhitneyu(GHZ_data[key], VVT_data[key])

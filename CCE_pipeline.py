@@ -40,7 +40,6 @@ dict_stat = {}
 
 # Calculate significant features and save to Excel file for further examination
 sign_features_CCE = cross_val_stat(df_combined, labels, cv, dict_stat, 'Clinical concepts')
-print(sign_features_CCE.head())
 # sign_features_CCE.to_excel('Sign_features_CCE.xlsx')
 
 # Unbiased UMLS codes chosen (including labels ID/no ID)
