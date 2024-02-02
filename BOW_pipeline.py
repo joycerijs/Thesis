@@ -12,14 +12,14 @@ import numpy as np
 from scipy.stats import mannwhitneyu
 from scipy import stats
 import matplotlib.pyplot as plt
-from Train_test_model import statistics
-from Train_test_model import cross_val_stat
-from Train_test_model import baseline
-from Train_test_model import characteristics_text
-from Train_test_model import pipeline_model
-from Train_test_model import mean_ROC_curves
-from Train_test_model import calculate_lc
-from Train_test_model import plot_learning_curve
+from Statistics_and_ML import statistics
+from Statistics_and_ML import cross_val_stat
+from Statistics_and_ML import baseline
+from Statistics_and_ML import characteristics_text
+from Statistics_and_ML import pipeline_model
+from Statistics_and_ML import mean_ROC_curves
+from Statistics_and_ML import calculate_lc
+from Statistics_and_ML import plot_learning_curve
 from sklearn.ensemble import GradientBoostingClassifier
 
 

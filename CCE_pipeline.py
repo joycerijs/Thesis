@@ -5,10 +5,10 @@ from statistics import mean
 import numpy as np
 from sklearn.model_selection import learning_curve
 import matplotlib.pyplot as plt
-from Train_test_model import pipeline_model
-from Train_test_model import mean_ROC_curves
-from Train_test_model import calculate_lc
-from Train_test_model import plot_learning_curve
+from Statistics_and_ML import pipeline_model
+from Statistics_and_ML import mean_ROC_curves
+from Statistics_and_ML import calculate_lc
+from Statistics_and_ML import plot_learning_curve
 
 
 # Load the UMLS features obtained from Medspacy
