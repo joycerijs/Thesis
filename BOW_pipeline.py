@@ -1,3 +1,6 @@
+'''In this script, all bag-of-words processing steps are performed and a ML model is trained and evaluated. 
+Furthermore, client age, gender, amount of files and amount of words are statistically compared.'''
+
 import pandas as pd
 import nltk
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -5,11 +8,9 @@ from nltk.corpus import stopwords
 from nltk.stem.snowball import SnowballStemmer
 import re
 import os
-from scipy.stats import chi2_contingency
 from sklearn import model_selection
 from statistics import mean
 import numpy as np
-from scipy.stats import mannwhitneyu
 from scipy import stats
 import matplotlib.pyplot as plt
 from Statistics_and_ML import statistics
@@ -24,7 +25,8 @@ from sklearn.ensemble import GradientBoostingClassifier
 
 
 def tokenize_and_stem(text):
-    # first tokenize by sentence, then by word to ensure that punctuation is caught as it's own token
+    '''This function serves as a tokenizer and stemmer for the calculation of TF-IDF features. Stems are returned.'''
+    # First tokenize by sentence, then by word to ensure that punctuation is caught as it's own token
     tokens = [word for sent in nltk.sent_tokenize(text, language='dutch') for word in nltk.word_tokenize(sent, language='dutch')]
     filtered_tokens = []
     for token in tokens:
@@ -118,7 +120,7 @@ def vocabulary(text):
 
 
 def merge_txt_files(input_path, output_path):
-    '''Voeg de txt files per client samen in een nieuw bestand in een nieuw mapje. hoeft maar 1 keer.'''
+    '''In this function, all files per client are combined into one file.'''
     for root, dirs, _ in os.walk(input_path):
         for dir_name in dirs:
             text_content = []
@@ -135,6 +137,7 @@ def merge_txt_files(input_path, output_path):
 
 
 def process_txt_files(input_directory):
+    '''In this function, the texts and filenames are stored into lists for further processing.'''
     # Create lists to store the content and file names
     all_text_content = []
     file_names = []
@@ -165,7 +168,7 @@ merged_path = 'F:/Documenten/Universiteit/Master_TM+_commissies/Jaar 3/Afstudere
 # baseline_combined = pd.read_excel('/overzicht-clienten-beiden-bewerkt.xlsx')
 # df_characteristics = baseline(baseline_VVT, baseline_GHZ, baseline_combined)
 
-# Calculate amount of files and words per client
+# Calculate amount of files and words per client and calculate statistics
 # input_directory_GHZ_merged = '/GHZ_merged'
 # input_directory_VVT_merged = '/VVT_merged'
 # num_files_per_client_GHZ, _ = characteristics_text(input_directory_GHZ)
@@ -178,7 +181,9 @@ merged_path = 'F:/Documenten/Universiteit/Master_TM+_commissies/Jaar 3/Afstudere
 # median_files_VVT = np.median(X_VVT)
 # _, p_files = mannwhitneyu(num_files_per_client_GHZ, num_files_per_client_VVT)
 # _, p_words = mannwhitneyu(len_filtered_tokens_GHZ, len_filtered_tokens_VVT)
-#### hier ook nog een nette dataframe van maken zoals baseline
+# dict_table_txt = {'Files per client (median)': [median_files_GHZ, median_files_VVT, p_files]
+#                   'Words per client (median)': [len_filtered_tokens_GHZ, len_filtered_tokens_VVT, p_words]}
+# df_txt_characteristics = pd.DataFrame.from_dict(dict_table_txt, orient='index', columns=['ID group', 'no ID group', 'P-value'])
 
 # Create lists to store the text content and file names for further processing
 all_text_content, file_names = process_txt_files(merged_path)
@@ -208,7 +213,7 @@ cv_dataframe_tfidf.insert(1, 'Label', labels)
 sign_features_tfidf = cross_val_stat(cv_dataframe_tfidf, labels, cv, dict_tfidf, 'TF-IDF')
 # sign_features_tfidf.to_excel('Sign_features_tfidf.xlsx')
 
-# Unbiased significant words chosen
+# Unbiased significant words chosen (including labels ID/no ID)
 unbiased_words = ['Label', 'emotionel', 'onrust', 'spanning', 'bos', 'rust', 'ontspann',
                   'bril', 'ogen', 'zien', 'draagt', 'oren', 'hoort', 'gehor',
                   'epilepsie', 'bloedonderzoek', 'licham', 'dochter', 'ouder', 'moeder',
@@ -227,8 +232,10 @@ unbiased_words = ['Label', 'emotionel', 'onrust', 'spanning', 'bos', 'rust', 'on
 #             linked_words_total.append(linked_word)
 #         print(f'stem: {word}, full word: {linked_words_total}')
 
+# Create dataframe of unbiased features
 cv_unbiased_stem = cv_dataframe_tfidf[unbiased_words]
 
+# Train and evaluate ML model
 tprs = []
 aucs = []
 _, axis = plt.subplots()
@@ -256,14 +263,17 @@ for i, (train_index, test_index) in enumerate(cv.split(cv_unbiased_stem, labels)
         pipeline_model(train_data, train_label, test_data, test_label, i, clf_XGB, tprs, aucs, tns, tps, fps, fns,
                         spec, sens, accuracy, axis)
     
+    # Learning curves
     # train_sizes, train_scores_mean, test_scores_mean = calculate_lc(clf_XGB, train_data, train_label, cv)
     # train_scores_mean_all.append(list(train_scores_mean))
     # test_scores_mean_all.append(list(test_scores_mean))
 
+# ROC curves
 # mean_ROC_curves(tprs, aucs, axis)
 # plt.show()
 # plt.close()
 
+# Scoring metrics
 dict_scores = {'Model scores XGB': [f'{np.round(mean(aucs), decimals=2)} ± {np.round(np.std(aucs), decimals=2)}',
                                     f'{np.round(mean(accuracy), decimals=2)} ± {np.round(np.std(accuracy), decimals=2)}',
                                     f'{np.round(mean(sens), decimals=2)} ± {np.round(np.std(sens), decimals=2)}',
@@ -274,6 +284,7 @@ df_scores = pd.DataFrame.from_dict(dict_scores, orient='index', columns=['AUC', 
                                                                             'Specificity'])
 print(df_scores)
 
+# Mean learning curve
 # fig, ax = plt.subplots()
 # title = 'Learning curve TF-IDF'
 # plot_learning_curve(ax, title, train_sizes, train_scores_mean_all, test_scores_mean_all)

@@ -19,6 +19,62 @@ import math
 import nltk
 
 
+def baseline(baseline_VVT, baseline_GHZ, baseline_combined):
+    '''In this function, mean and std of age is calculated and the groups are statistically compared.
+    Furtermore, gender is statistically compared. A dataframe with characteristics and p-value is returned.'''
+    # First calculate the means and stds of age in the two groups, rounded to two decimals
+    mean_age_0 = np.round(baseline_VVT['Leeftijd'].mean(), decimals=2)
+    std_age_0 = np.round(baseline_VVT['Leeftijd'].std(), decimals=2)
+    mean_age_1 = np.round(baseline_GHZ['Leeftijd'].mean(), decimals=2)
+    std_age_1 = np.round(baseline_GHZ['Leeftijd'].std(), decimals=2)
+    # Next, find the percentage of females per group
+    f_gender_0 = (baseline_VVT['Geslacht'].sum())/len(baseline_VVT)
+    f_gender_1 = (baseline_GHZ['Geslacht'].sum())/len(baseline_GHZ)
+    # Calculate the difference in gender with a Chi-square and the difference in age with a Student's t-test
+    chi_table = pd.crosstab(baseline_combined['Label'], baseline_combined['Geslacht'])
+    _, p_gender, _, _ = chi2_contingency(chi_table)
+    _, p_age = stats.ttest_ind(baseline_VVT['Leeftijd'], baseline_GHZ['Leeftijd'])
+
+    # Combine the calculated values into a dictionary, that is converted to a dataframe for visualisation.
+    dict_table = {'Amount of patients': [f'N={len(baseline_GHZ)}', f'N={len(baseline_VVT)}', ' '],
+                  'Age': [f'{mean_age_1} ± {std_age_1}', f'{mean_age_0} ± {std_age_0}', p_age],
+                  'Gender': [f'{np.round(f_gender_1*100, decimals=0)}% females (N={np.round(f_gender_1*len(baseline_GHZ), decimals=0)})',
+                             f'{np.round(f_gender_0*100, decimals=0)}% females (N={np.round(f_gender_0*len(baseline_VVT), decimals=0)})', p_gender]}
+    df_characteristics = pd.DataFrame.from_dict(dict_table, orient='index', columns=['ID group', 'no ID group', 'P-value'])
+    return df_characteristics
+
+
+def characteristics_text(input_directory):
+    '''Calculate the amount of files and words per client.'''
+    num_files_per_client = []
+
+    for _, _, files in os.walk(input_directory):
+        num_files = len(files)
+        num_files_per_client.append(num_files)
+
+    num_files_per_client.pop(0)  # eerste mapje is 0
+    num_files_per_client.sort()
+
+    len_filtered_tokens = []
+    # files = glob.glob(os.path.join(input_directory, '**/*'))    #voor losse files van de clienten
+    files = os.listdir(input_directory)     # voor de merged client files
+    for file_name in files:
+        file_path = os.path.join(input_directory, file_name)
+        if file_name.endswith(".txt") and os.path.isfile(file_path):
+            with open(file_path, "r", encoding="utf-8") as file:
+                    text = file.read()
+
+            tokens = [word for sent in nltk.sent_tokenize(text) for word in nltk.word_tokenize(sent)]
+            filtered_tokens = []
+
+            # filter out any tokens not containing letters (e.g., numeric tokens, raw punctuation)
+            for token in tokens:
+                if re.fullmatch('[a-zA-Z]+', token): #Hier worden alleen tokens meegnomen waar alleen letters in zitten. getallen worden weggefilterd.
+                    filtered_tokens.append(token)
+            len_filtered_tokens.append(len(filtered_tokens))
+    return num_files_per_client, len_filtered_tokens
+
+
 def statistics(GHZ_data, VVT_data, feature_type, train_data):
     '''In this function, features in the input files can be statistically compared between the ID- and no-ID groups.
     For TF-IDF features, a Mann Whitney U test should be performed and for clinical concepts, a Chi-square test should be performed.
@@ -29,6 +85,7 @@ def statistics(GHZ_data, VVT_data, feature_type, train_data):
     for key in GHZ_data.keys():
         if feature_type == 'Clinical concepts':
             _, p, _, _ = chi2_contingency(pd.crosstab(train_data['Label'], train_data[key]))
+            print('yyes')
         
         if feature_type == 'TF-IDF':
             _, p = mannwhitneyu(GHZ_data[key], VVT_data[key])
@@ -90,82 +147,21 @@ def cross_val_stat(cv_dataframe, labels, cv, dict, feature_type):
     return result_dataframe
 
 
-def baseline(df_0_baseline, df_1_baseline, df_baseline_combined):
-    '''Hier gebleven!'''
-    # First calculate the means and stds of age in the two groups, rounded to two decimals
-    mean_age_0 = np.round(df_0_baseline['Leeftijd'].mean(), decimals=2)
-    std_age_0 = np.round(df_0_baseline['Leeftijd'].std(), decimals=2)
-    mean_age_1 = np.round(df_1_baseline['Leeftijd'].mean(), decimals=2)
-    std_age_1 = np.round(df_1_baseline['Leeftijd'].std(), decimals=2)
-    # Next, find the percentage of females per group
-    f_gender_0 = (df_0_baseline['Geslacht'].sum())/len(df_0_baseline)
-    f_gender_1 = (df_1_baseline['Geslacht'].sum())/len(df_1_baseline)
-    # Calculate the difference in gender with a Chi-square and the difference in age with a Student's t-test
-    chi_table = pd.crosstab(df_baseline_combined['Label'], df_baseline_combined['Geslacht'])
-    _, p_gender, _, _ = chi2_contingency(chi_table)
-    # print(p_gender)
-    _, p_age = stats.ttest_ind(df_0_baseline['Leeftijd'], df_1_baseline['Leeftijd'])
-
-    # Combine the calculated values into a dictionary, that is converted to a dataframe for visualisation.
-    dict_table = {'Amount of patients': [f'N={len(df_1_baseline)}', f'N={len(df_0_baseline)}', ' '],
-                  'Age': [f'{mean_age_1} ± {std_age_1}', f'{mean_age_0} ± {std_age_0}', p_age],
-                  'Gender': [f'{np.round(f_gender_1*100, decimals=0)}% females (N={np.round(f_gender_1*len(df_1_baseline), decimals=0)})',
-                             f'{np.round(f_gender_0*100, decimals=0)}% females (N={np.round(f_gender_0*len(df_0_baseline), decimals=0)})', p_gender]}
-    df_characteristics = pd.DataFrame.from_dict(dict_table, orient='index', columns=['ID group', 'no ID group', 'P-value'])
-    return df_characteristics
-
-
-def characteristics_text(input_directory):
-    '''Aantal tokens per bestand en per client berekenen. en mediaan aantal bestanden per client.'''
-    num_files_per_client = []
-
-    for _, _, files in os.walk(input_directory):
-        num_files = len(files)
-        num_files_per_client.append(num_files)
-
-    num_files_per_client.pop(0)  # eerste mapje is 0
-    num_files_per_client.sort()
-
-    len_filtered_tokens = []
-    # files = glob.glob(os.path.join(input_directory, '**/*'))    #voor losse files van de clienten
-    files = os.listdir(input_directory)     # voor de merged client files
-    for file_name in files:
-        file_path = os.path.join(input_directory, file_name)
-        if file_name.endswith(".txt") and os.path.isfile(file_path):
-            with open(file_path, "r", encoding="utf-8") as file:
-                    text = file.read()
-
-            tokens = [word for sent in nltk.sent_tokenize(text) for word in nltk.word_tokenize(sent)]
-            filtered_tokens = []
-
-            # filter out any tokens not containing letters (e.g., numeric tokens, raw punctuation)
-            for token in tokens:
-                if re.fullmatch('[a-zA-Z]+', token): #Hier worden alleen tokens meegnomen waar alleen letters in zitten. getallen worden weggefilterd.
-                    filtered_tokens.append(token)
-            len_filtered_tokens.append(len(filtered_tokens))
-    return num_files_per_client, len_filtered_tokens
-
-
-
 def pipeline_model(train_data, train_label, test_data, test_label, i, clf, tprs, aucs, tns, tps, fps, fns, spec, sens, accuracy, axis,
                    filename='model.sav'):
-    '''In deze functie wordt een machine learning model ontwikkeld en getest. Dataframes met de train data, train
-    labels, test data en test labels moeten als input worden gegeven. Indien het model opgeslagen moet worden,
-    moet een filename als input worden gegeven. Metrics terecht-positieven (tp),
-    terecht-negatieven (tn), fout-positieven (fp), fout-negatieven (fn), sensitiviteit, specificiteit en
-    accuraatheid worden als input gegeven, aangevuld bij elke fold van de cross-validatie en als output gegeven.'''
+    '''In this function, a ML model is trained and tested. Scoring metrics are returned and appended every fold.'''
     clf.fit(train_data, train_label)
-    # Uncomment deze om het model op te slaan.
+    # Uncomment to save model
     # pickle.dump(clf, open(filename, 'wb'))
     predicted = clf.predict(test_data)
 
-    # plot ROC-curve per fold
-    mean_fpr = np.linspace(0, 1, 100)    # Help for plotting the false positive rate
-    viz = RocCurveDisplay.from_estimator(clf, test_data, test_label, name='ROC fold {}'.format(i+1), alpha=0.3, lw=1, ax=axis)    # Plot the ROC-curve for this fold on the specified axis.
-    interp_tpr = np.interp(mean_fpr, viz.fpr, viz.tpr)    # Interpolate the true positive rate
-    interp_tpr[0] = 0.0    # Set the first value of the interpolated true positive rate to 0.0
-    tprs.append(interp_tpr)   # Append the interpolated true positive rate to the list
-    aucs.append(viz.roc_auc)    # Append the area under the curve to the list
+    # Plot ROC-curve per fold
+    mean_fpr = np.linspace(0, 1, 100)
+    viz = RocCurveDisplay.from_estimator(clf, test_data, test_label, name='ROC fold {}'.format(i+1), alpha=0.3, lw=1, ax=axis)
+    interp_tpr = np.interp(mean_fpr, viz.fpr, viz.tpr)
+    interp_tpr[0] = 0.0
+    tprs.append(interp_tpr)
+    aucs.append(viz.roc_auc)
 
     tn, fp, fn, tp = confusion_matrix(test_label, predicted).ravel()
     tns.append(tn)
@@ -199,10 +195,11 @@ def mean_ROC_curves(tprs, aucs, axis):
     return
 
 
-def calculate_lc(estimator, X, y, cv=None,
+def calculate_lc(clf, train_data, train_label, cv=None,
                         n_jobs=None, train_sizes=np.linspace(.01, 1.0, 20)):
+    '''In this function, a learning curve of an estimator is created.'''
     train_sizes, train_scores, test_scores = \
-    learning_curve(estimator, X, y, cv=None, n_jobs=n_jobs,
+    learning_curve(clf, train_data, train_label, cv=None, n_jobs=n_jobs,
                        train_sizes=train_sizes)
     train_scores_mean = np.mean(train_scores, axis=1)
     test_scores_mean = np.mean(test_scores, axis=1)
@@ -210,6 +207,7 @@ def calculate_lc(estimator, X, y, cv=None,
 
 
 def plot_learning_curve(axes, title, train_sizes, train_scores_mean_all, test_scores_mean_all):
+    '''In this function, the mean learning curve of all folds is created and a plot is returned.'''
     train_scores_mean_cros = [np.mean(pos) for pos in zip(*train_scores_mean_all)]  ## sterretje zorgt dat de elementen van lists op dezelfde positie in de lists samen worden gegroepeerd.
     test_scores_mean_cros = [sum(pos)/len(pos) for pos in zip(*test_scores_mean_all)]
     train_scores_std_cros = [np.std(pos) for pos in zip(*train_scores_mean_all)]
@@ -236,6 +234,3 @@ def plot_learning_curve(axes, title, train_sizes, train_scores_mean_all, test_sc
                         color="g", label=r'$\pm$ 1 std cross-validation score')
     axes.legend(loc="lower right")
     return plt
-
-
-print('finish')
