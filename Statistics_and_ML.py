@@ -1,11 +1,11 @@
+'''This file contains the functions developed for calculating statistics and training and evaluating 
+machine learning models.'''
+
 import re
 import os
 import pandas as pd
 from sklearn import metrics
 from sklearn.metrics import confusion_matrix
-from sklearn import model_selection
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import GradientBoostingClassifier
 from statistics import mean
 import numpy as np
 from scipy import stats
@@ -13,27 +13,25 @@ from sklearn.metrics import confusion_matrix
 from scipy.stats import chi2_contingency
 from scipy.stats import mannwhitneyu
 from sklearn.model_selection import learning_curve
+from sklearn.metrics import RocCurveDisplay
 import matplotlib.pyplot as plt
-from sklearn.model_selection import ShuffleSplit
-from sklearn.metrics import RocCurveDisplay, auc
-from matplotlib import pyplot
-from sklearn.model_selection import LeaveOneOut
-from sklearn.model_selection import LearningCurveDisplay
 import math
 import nltk
 
 
-def statistics(GHZ_data, VVT_data, train_data):
-    '''In deze functie worden alle variabelen in de gegeven files met elkaar vergeleken middels Student's t-test.
-    De variabelen die significant van elkaar verschillen (p<0.05) worden in een dataframe gezet met gemiddelde,
-    standaard deviatie en p-waarde. Deze dataframe is de output van de functie'''
+def statistics(GHZ_data, VVT_data, feature_type, train_data):
+    '''In this function, features in the input files can be statistically compared between the ID- and no-ID groups.
+    For TF-IDF features, a Mann Whitney U test should be performed and for clinical concepts, a Chi-square test should be performed.
+    The significantly different features are placed in a dataframe including mean, std and the p-value. The p-values are corrected
+    with Holm-Bonferroni.'''
+
     df_p = pd.DataFrame({'Features': GHZ_data.keys()})
     for key in GHZ_data.keys():
-        # Chi square binair
-        # _, p, _, _ = chi2_contingency(pd.crosstab(train_data['Label'], train_data[key]))
+        if feature_type == 'Clinical concepts':
+            _, p, _, _ = chi2_contingency(pd.crosstab(train_data['Label'], train_data[key]))
         
-        # Mann Whitney U TD-IDF
-        _, p = mannwhitneyu(GHZ_data[key], VVT_data[key])
+        if feature_type == 'TF-IDF':
+            _, p = mannwhitneyu(GHZ_data[key], VVT_data[key])
 
         df_p.loc[df_p['Features'] == key, 'P-value'] = p
         mean_VVT = np.round(VVT_data[key].mean(), decimals=2)
@@ -53,7 +51,8 @@ def statistics(GHZ_data, VVT_data, train_data):
     return df_p_for_table
 
 
-def cross_val_stat(cv_dataframe, labels, cv, dict):
+def cross_val_stat(cv_dataframe, labels, cv, dict, feature_type):
+    '''This function allows for cross-validation of the calculated statistics on the trainsets.'''
     for i, (train_index, _) in enumerate(cv.split(cv_dataframe, labels)):
         train_data = cv_dataframe.iloc[train_index]
         grouped = train_data.groupby('Label')
@@ -61,13 +60,14 @@ def cross_val_stat(cv_dataframe, labels, cv, dict):
         df_GHZ.drop(['Label'], axis=1)
         df_VVT = grouped.get_group(0)
         df_VVT.drop(['Label'], axis=1)
-        df_p_for_table = statistics(df_GHZ, df_VVT, train_data)
+        df_p_for_table = statistics(df_GHZ, df_VVT, feature_type, train_data)
+        # Dataframes for every fold are stored in a dictionary
         dict[f'df_{i}'] = df_p_for_table
 
     feature_totals = {}
     feature_counts = {}
 
-    # Loop door elke dataframe in de dictionary
+    # Loop through every dataframe in de dictionary
     for df in dict.values():
         for _, row in df.iterrows():
             feature = row['Features']
@@ -79,7 +79,7 @@ def cross_val_stat(cv_dataframe, labels, cv, dict):
                 feature_counts[feature] = 1
     result_list = []
 
-    # Vul de resultaten dataframe met gemiddelde waarden
+    # Fill in the results dataframe with mean values
     for feature, total in feature_totals.items():
         count = feature_counts[feature]
         if count > 5:
@@ -91,6 +91,7 @@ def cross_val_stat(cv_dataframe, labels, cv, dict):
 
 
 def baseline(df_0_baseline, df_1_baseline, df_baseline_combined):
+    '''Hier gebleven!'''
     # First calculate the means and stds of age in the two groups, rounded to two decimals
     mean_age_0 = np.round(df_0_baseline['Leeftijd'].mean(), decimals=2)
     std_age_0 = np.round(df_0_baseline['Leeftijd'].std(), decimals=2)

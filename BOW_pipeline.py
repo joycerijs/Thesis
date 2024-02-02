@@ -205,7 +205,7 @@ cv_dataframe_tfidf = pd.DataFrame(Count_data_tfidf.toarray(), columns=tfidf.get_
 cv_dataframe_tfidf.insert(1, 'Label', labels)
 
 # Calculate significant features and save to Excel file for further examination
-sign_features_tfidf = cross_val_stat(cv_dataframe_tfidf, labels, cv, dict_tfidf)
+sign_features_tfidf = cross_val_stat(cv_dataframe_tfidf, labels, cv, dict_tfidf, 'TF-IDF')
 # sign_features_tfidf.to_excel('Sign_features_tfidf.xlsx')
 
 # Unbiased significant words chosen
