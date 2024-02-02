@@ -1,3 +1,5 @@
+'''This yaml file can be used to initialize the filter for de-identification.'''
+
 # Filters to apply
 clean_accents: True
 nlp_filter: False
