@@ -6,11 +6,14 @@ import pandas as pd
 
 
 def remove_accents(text):
+    '''This script removes accents from the names lists.'''
     text = unicodedata.normalize('NFD', text).encode('ascii', 'ignore')
     return str(text.decode("utf-8"))
 
 
 def firstnames_processing(df):
+    '''Client first names added to the firstnames list were split up at spaces. If '.'
+    was present in the cell, this meant that only first letters were given and therefore these cells were removed.'''
     split_names = []
     for index, row in df.iterrows():
         cells = row['voornaam']
@@ -29,6 +32,7 @@ def firstnames_processing(df):
 
 
 def lastnames_processing(df):
+    '''Client last names added to the lastnames list were split up at '-'.'''
     split_names = []
     for _, row in df.iterrows():
         names = row['achternaam'].split('-')
