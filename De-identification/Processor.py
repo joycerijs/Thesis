@@ -1,3 +1,5 @@
+'''This script for processing keywords was fully adopted from L. van der Meulen.'''
+
 import os
 import string
 import io
