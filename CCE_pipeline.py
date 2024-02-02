@@ -28,6 +28,8 @@ df_VVT = pd.concat([df_VVT, pd.DataFrame(0, columns=missing_VVT, index=df_VVT.in
 df_combined = pd.concat([df_GHZ, df_VVT], ignore_index=True)
 labels = df_combined['Label']
 
+############## Hier ook cross-val stat nog bij!!!!
+
 # Unbiased UMLS codes
 unbiased_codes = ['Label', 'C0014544', 'C0543467', 'C1275743', 'C0030551', 'C0233494', 'C0085631', 'C0337527', 'C0018767', 'C0004352', 'C0337514', 'C0015421', 'C0042812', 'C0026591', 'C0920139']
 
