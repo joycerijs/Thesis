@@ -388,7 +388,7 @@ def main():
         files_passed, progress_bar = process_file(file_path_count, file_path, output_path, files_passed, progress_bar)
     progress_bar.close()
 
-    # Write un-processed to files_passed
+    # Write unprocessed to files_passed
     for file in files_passed:
         files_passed_txt.write(file+"\n")
     files_passed_txt.close()
