@@ -52,12 +52,12 @@ def characteristics_text(input_directory):
         num_files = len(files)
         num_files_per_client.append(num_files)
 
-    num_files_per_client.pop(0)  # eerste mapje is 0
+    num_files_per_client.pop(0)
     num_files_per_client.sort()
 
     len_filtered_tokens = []
-    # files = glob.glob(os.path.join(input_directory, '**/*'))    #voor losse files van de clienten
-    files = os.listdir(input_directory)     # voor de merged client files
+    # files = glob.glob(os.path.join(input_directory, '**/*'))    # For separate client files
+    files = os.listdir(input_directory)     # For merged client files
     for file_name in files:
         file_path = os.path.join(input_directory, file_name)
         if file_name.endswith(".txt") and os.path.isfile(file_path):
@@ -67,9 +67,9 @@ def characteristics_text(input_directory):
             tokens = [word for sent in nltk.sent_tokenize(text) for word in nltk.word_tokenize(sent)]
             filtered_tokens = []
 
-            # filter out any tokens not containing letters (e.g., numeric tokens, raw punctuation)
+            # Filter out any tokens not containing letters (e.g., numeric tokens, raw punctuation)
             for token in tokens:
-                if re.fullmatch('[a-zA-Z]+', token): #Hier worden alleen tokens meegnomen waar alleen letters in zitten. getallen worden weggefilterd.
+                if re.fullmatch('[a-zA-Z]+', token):
                     filtered_tokens.append(token)
             len_filtered_tokens.append(len(filtered_tokens))
     return num_files_per_client, len_filtered_tokens
@@ -77,7 +77,7 @@ def characteristics_text(input_directory):
 
 def statistics(GHZ_data, VVT_data, feature_type, train_data):
     '''In this function, features in the input files can be statistically compared between the ID- and no-ID groups.
-    For TF-IDF features, a Mann Whitney U test should be performed and for clinical concepts, a Chi-square test should be performed.
+    For TF-IDF features, a Mann Whitney U test is performed and for clinical concepts, a Chi-square test is performed.
     The significantly different features are placed in a dataframe including mean, std and the p-value. The p-values are corrected
     with Holm-Bonferroni.'''
 
@@ -207,7 +207,7 @@ def calculate_lc(clf, train_data, train_label, cv=None,
 
 def plot_learning_curve(axes, title, train_sizes, train_scores_mean_all, test_scores_mean_all):
     '''In this function, the mean learning curve of all folds is created and a plot is returned.'''
-    train_scores_mean_cros = [np.mean(pos) for pos in zip(*train_scores_mean_all)]  ## sterretje zorgt dat de elementen van lists op dezelfde positie in de lists samen worden gegroepeerd.
+    train_scores_mean_cros = [np.mean(pos) for pos in zip(*train_scores_mean_all)]
     test_scores_mean_cros = [sum(pos)/len(pos) for pos in zip(*test_scores_mean_all)]
     train_scores_std_cros = [np.std(pos) for pos in zip(*train_scores_mean_all)]
     test_scores_std_cros = [np.std(pos) for pos in zip(*test_scores_mean_all)]
