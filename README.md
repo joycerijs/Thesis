@@ -29,4 +29,5 @@ and Jifke Veenland (Researcher and Education Innovator at Erasmus MC).
 
 
 **Contact**
-Joyce Rijs: joyce.rijs@hotmail.com
+
+If anything is unclear, please contact Joyce Rijs: joyce.rijs@hotmail.com
