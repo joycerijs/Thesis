@@ -28,4 +28,5 @@ and Jifke Veenland (Researcher and Education Innovator at Erasmus MC).
 (2) Seinen TM, Kors JA, van Mulligen EM, Fridgeirsson E, Rijnbeek PR. The added value of text from Dutch general practitioner notes in predictive modeling. J Am Med Inform Assoc. 2023 Nov 17;30(12):1973–84.
 
 
-_If something is not clear, please send an e-mail to joyce.rijs@hotmail.com_
+**Contact**
+Joyce Rijs: joyce.rijs@hotmail.com
