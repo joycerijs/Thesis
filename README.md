@@ -22,7 +22,9 @@ and Jifke Veenland (Researcher and Education Innovator at Erasmus MC).
 - Statictics_and_ML.py: This script contains the functions developed for calculating statistics and training and evaluating ML models.
 
 **References**
+
 (1) van der Meulen L. Towards Data Science. 2021 [cited 2024 Jan 30]. Remove personal information from a text with Python. Available from: https://towardsdatascience.com/remove-personal-information-from-text-with-python-232cb69cf074.
+
 (2) Seinen TM, Kors JA, van Mulligen EM, Fridgeirsson E, Rijnbeek PR. The added value of text from Dutch general practitioner notes in predictive modeling. J Am Med Inform Assoc. 2023 Nov 17;30(12):1973–84.
 
 
