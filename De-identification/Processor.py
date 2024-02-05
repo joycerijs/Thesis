@@ -1,10 +1,7 @@
-'''This script for processing keywords was fully adopted from L. van der Meulen.'''
+'''This script contains the KeywordProcessor class for processing keywords and was fully adopted from L. van der Meulen.'''
 
 import os
 import string
-import io
-import sys
-import trace
 
 
 class KeywordProcessor(object):

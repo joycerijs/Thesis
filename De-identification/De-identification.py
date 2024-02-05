@@ -1,7 +1,7 @@
-'''This script can be used to extract and de-identify text of the following files: PDF, doc, docx, odt, txt, png, tiff, jpg, jpeg. 
+'''This script was used to extract and de-identify text of the following files: PDF, doc, docx, odt, txt, png, tiff, jpg and jpeg. 
 First names, last names, place names, street names, countries, institution names, phone numbers, email addresses, 
 social security numbers, and postal codes will be filtered out. 
-NOTE: Novicare specific client names and institution names were added to the lists in the IDA project, but due to
+NOTE: Novicare specific client names and institution names were added to the lists in the IDA project, but for
 privacy reasons these are not included in the datasets of this repository.'''
 
 import re

@@ -1,5 +1,5 @@
-'''In this script, all bag-of-words processing steps are performed and a ML model is trained and evaluated. 
-Furthermore, client age, gender, amount of files and amount of words are statistically compared.'''
+'''With this script, all bag-of-words processing steps were performed and a ML model was trained and evaluated. 
+Furthermore, client age, gender, amount of files and amount of words were statistically compared.'''
 
 import pandas as pd
 import nltk

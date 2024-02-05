@@ -1,4 +1,6 @@
-'''In this script, the UMLS codes obtained with the MedSpacy toolkit are processed and a ML model is trained and evaluated.'''
+'''With this script, the UMLS codes obtained with the MedSpacy toolkit were processed and a ML model was trained and evaluated.
+NOTE: The English dependencies and language context rules of MedSpacy were replaced by Dutch versions by T. Seinen (1). 
+This Dutch MedSpacy toolkit was not published yet and therefore not included in this repository.'''
 
 import pandas as pd
 from sklearn import model_selection
