@@ -20,6 +20,7 @@ and Jifke Veenland (Researcher and Education Innovator at Erasmus MC).
 - CCE_pipeline.py: With this script, the UMLS codes obtained with the MedSpacy toolkit were processed and a ML model was trained and evaluated. NOTE: The English dependencies and language context rules of MedSpacy were replaced by Dutch versions by T. Seinen (2). 
                     This Dutch MedSpacy toolkit was not published yet and therefore not included in this repository.
 - Statictics_and_ML.py: This script contains the functions developed for calculating statistics and training and evaluating ML models.
+- env-export-conda.txt: This txt file contains information about the dependencies and libraries used.
 
 **References**
 
