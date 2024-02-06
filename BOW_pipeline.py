@@ -160,7 +160,8 @@ def process_txt_files(input_directory):
 # merged_path = '/all_merged' # Path where all merged files will be put in.
 # merge_txt_files(input_directory_GHZ, merged_path)
 # merge_txt_files(input_directory_VVT, merged_path)
-merged_path = 'F:/Documenten/Universiteit/Master_TM+_commissies/Jaar 3/Afstuderen/Thesis/OneDrive_2023-11-27/all_merged'
+# merged_path = 'F:/Documenten/Universiteit/Master_TM+_commissies/Jaar 3/Afstuderen/Thesis/OneDrive_2023-11-27/all_merged'
+merged_path = '//storage/v/vcl04/INTG/DATA/Endocrinologie/PWS-EAA/Anna/IDA/Joyce (Novicare)/OneDrive_2023-11-27/Export data/all_merged'
 
 # Load files with age and gender of clients and calculate statistics
 # baseline_VVT = pd.read_excel('/overzicht-clienten-VVT-bewerkt.xlsx')
@@ -210,7 +211,7 @@ cv_dataframe_tfidf = pd.DataFrame(Count_data_tfidf.toarray(), columns=tfidf.get_
 cv_dataframe_tfidf.insert(1, 'Label', labels)
 
 # Calculate significant features and save to Excel file for further examination
-sign_features_tfidf = cross_val_stat(cv_dataframe_tfidf, labels, cv, dict_tfidf, 'TF-IDF')
+# sign_features_tfidf = cross_val_stat(cv_dataframe_tfidf, labels, cv, dict_tfidf, 'TF-IDF')
 # sign_features_tfidf.to_excel('Sign_features_tfidf.xlsx')
 
 # Unbiased significant words chosen (including labels ID/no ID)
@@ -264,28 +265,28 @@ for i, (train_index, test_index) in enumerate(cv.split(cv_unbiased_stem, labels)
                         spec, sens, accuracy, axis)
     
     # Learning curves
-    # train_sizes, train_scores_mean, test_scores_mean = calculate_lc(clf_XGB, train_data, train_label, cv)
-    # train_scores_mean_all.append(list(train_scores_mean))
-    # test_scores_mean_all.append(list(test_scores_mean))
+    train_sizes, train_scores_mean, test_scores_mean = calculate_lc(clf_XGB, train_data, train_label, cv)
+    train_scores_mean_all.append(list(train_scores_mean))
+    test_scores_mean_all.append(list(test_scores_mean))
 
 # ROC curves
 # mean_ROC_curves(tprs, aucs, axis)
 # plt.show()
-# plt.close()
+plt.close()
 
-# Scoring metrics
-dict_scores = {'Model scores XGB': [f'{np.round(mean(aucs), decimals=2)} ± {np.round(np.std(aucs), decimals=2)}',
-                                    f'{np.round(mean(accuracy), decimals=2)} ± {np.round(np.std(accuracy), decimals=2)}',
-                                    f'{np.round(mean(sens), decimals=2)} ± {np.round(np.std(sens), decimals=2)}',
-                                    f'{np.round(mean(spec), decimals=2)} ± {np.round(np.std(spec), decimals=2)}',
-                                    ]}
+# # Scoring metrics
+# dict_scores = {'Model scores XGB': [f'{np.round(mean(aucs), decimals=2)} ± {np.round(np.std(aucs), decimals=2)}',
+#                                     f'{np.round(mean(accuracy), decimals=2)} ± {np.round(np.std(accuracy), decimals=2)}',
+#                                     f'{np.round(mean(sens), decimals=2)} ± {np.round(np.std(sens), decimals=2)}',
+#                                     f'{np.round(mean(spec), decimals=2)} ± {np.round(np.std(spec), decimals=2)}',
+#                                     ]}
 
-df_scores = pd.DataFrame.from_dict(dict_scores, orient='index', columns=['AUC', 'Accuracy', 'Sensitivity',
-                                                                            'Specificity'])
-print(df_scores)
+# df_scores = pd.DataFrame.from_dict(dict_scores, orient='index', columns=['AUC', 'Accuracy', 'Sensitivity',
+#                                                                             'Specificity'])
+# print(df_scores)
 
 # Mean learning curve
-# fig, ax = plt.subplots()
-# title = 'Learning curve TF-IDF'
-# plot_learning_curve(ax, title, train_sizes, train_scores_mean_all, test_scores_mean_all)
-# plt.show()
+fig, ax = plt.subplots()
+title = 'Learning curve TF-IDF'
+plot_learning_curve(ax, title, train_sizes, train_scores_mean_all, test_scores_mean_all)
+plt.show()

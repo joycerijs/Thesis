@@ -22,8 +22,10 @@ from Statistics_and_ML import plot_learning_curve
 # Load the datasets of UMLS features obtained from MedSpacy
 # df_GHZ = pd.read_csv('/GHZ_features_UMLS.csv', index_col=0)
 # df_VVT = pd.read_csv('/VVT_features_UMLS.csv', index_col=0)
-df_GHZ = pd.read_csv('F:/Documenten/Universiteit/Master_TM+_commissies/Jaar 3/Afstuderen/Thesis/MedSpacy/run_GHZ_1312_features_UMLS.csv', index_col=0)
-df_VVT = pd.read_csv('F:/Documenten/Universiteit/Master_TM+_commissies/Jaar 3/Afstuderen/Thesis/MedSpacy/run_VVT_1312_features_UMLS.csv', index_col=0)
+# df_GHZ = pd.read_csv('F:/Documenten/Universiteit/Master_TM+_commissies/Jaar 3/Afstuderen/Thesis/MedSpacy/run_GHZ_1312_features_UMLS.csv', index_col=0)
+# df_VVT = pd.read_csv('F:/Documenten/Universiteit/Master_TM+_commissies/Jaar 3/Afstuderen/Thesis/MedSpacy/run_VVT_1312_features_UMLS.csv', index_col=0)
+df_GHZ = pd.read_csv('//storage/v/vcl04/INTG/DATA/Endocrinologie/PWS-EAA/Anna/IDA/Joyce (Novicare)/MedSpacy/run_GHZ_1312_features_UMLS.csv', index_col=0)
+df_VVT = pd.read_csv('//storage/v/vcl04/INTG/DATA/Endocrinologie/PWS-EAA/Anna/IDA/Joyce (Novicare)/MedSpacy/run_VVT_1312_features_UMLS.csv', index_col=0)
 df_GHZ['Label'] = 1
 df_VVT['Label'] = 0
 
@@ -41,7 +43,7 @@ cv = model_selection.StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
 dict_stat = {}
 
 # Calculate significant features and save to Excel file for further examination
-sign_features_CCE = cross_val_stat(df_combined, labels, cv, dict_stat, 'Clinical concepts')
+# sign_features_CCE = cross_val_stat(df_combined, labels, cv, dict_stat, 'Clinical concepts')
 # sign_features_CCE.to_excel('Sign_features_CCE.xlsx')
 
 # Unbiased UMLS codes chosen (including labels ID/no ID)
@@ -86,28 +88,28 @@ for i, (train_index, test_index) in enumerate(cv.split(cv_unbiased, labels)):
                         spec, sens, accuracy, axis)
     
     # Learning curves
-    # train_sizes, train_scores_mean, test_scores_mean = calculate_lc(clf_XGB, train_data, train_label, cv)
-    # train_scores_mean_all.append(list(train_scores_mean))
-    # test_scores_mean_all.append(list(test_scores_mean))
+    train_sizes, train_scores_mean, test_scores_mean = calculate_lc(clf_XGB, train_data, train_label, cv)
+    train_scores_mean_all.append(list(train_scores_mean))
+    test_scores_mean_all.append(list(test_scores_mean))
 
 # ROC curves
 # mean_ROC_curves(tprs, aucs, axis)
 # plt.show()
 plt.close()
 
-# Scoring metrics
-dict_scores = {'Model scores XGB': [f'{np.round(mean(aucs), decimals=2)} ± {np.round(np.std(aucs), decimals=2)}',
-                                    f'{np.round(mean(accuracy), decimals=2)} ± {np.round(np.std(accuracy), decimals=2)}',
-                                    f'{np.round(mean(sens), decimals=2)} ± {np.round(np.std(sens), decimals=2)}',
-                                    f'{np.round(mean(spec), decimals=2)} ± {np.round(np.std(spec), decimals=2)}',
-                                    ]}
+# # Scoring metrics
+# dict_scores = {'Model scores XGB': [f'{np.round(mean(aucs), decimals=2)} ± {np.round(np.std(aucs), decimals=2)}',
+#                                     f'{np.round(mean(accuracy), decimals=2)} ± {np.round(np.std(accuracy), decimals=2)}',
+#                                     f'{np.round(mean(sens), decimals=2)} ± {np.round(np.std(sens), decimals=2)}',
+#                                     f'{np.round(mean(spec), decimals=2)} ± {np.round(np.std(spec), decimals=2)}',
+#                                     ]}
 
-df_scores = pd.DataFrame.from_dict(dict_scores, orient='index', columns=['AUC', 'Accuracy', 'Sensitivity',
-                                                                            'Specificity'])
-print(df_scores)
+# df_scores = pd.DataFrame.from_dict(dict_scores, orient='index', columns=['AUC', 'Accuracy', 'Sensitivity',
+#                                                                             'Specificity'])
+# print(df_scores)
 
 # Mean learning curve
-# fig, ax = plt.subplots()
-# title = 'Learning curve clinical concepts'
-# plot_learning_curve(ax, title, train_sizes, train_scores_mean_all, test_scores_mean_all)
-# plt.show()
+fig, ax = plt.subplots()
+title = 'Learning curve clinical concepts'
+plot_learning_curve(ax, title, train_sizes, train_scores_mean_all, test_scores_mean_all)
+plt.show()
