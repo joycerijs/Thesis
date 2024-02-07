@@ -259,7 +259,7 @@ for i, (train_index, test_index) in enumerate(cv.split(cv_unbiased_stem, labels)
     train_label = cv_unbiased_stem['Label'].iloc[train_index]
     test_label = cv_unbiased_stem['Label'].iloc[test_index]
 
-    clf_XGB = GradientBoostingClassifier(max_features='sqrt', subsample=0.8, random_state=42)
+    clf_XGB = GradientBoostingClassifier(random_state=42)
     tprs, aucs, tns, tps, fps, fns, spec, sens, accuracy = \
         pipeline_model(train_data, train_label, test_data, test_label, i, clf_XGB, tprs, aucs, tns, tps, fps, fns,
                         spec, sens, accuracy, axis)
