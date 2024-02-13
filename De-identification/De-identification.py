@@ -10,18 +10,18 @@ import glob
 import yaml
 import unicodedata
 import pytesseract
-import tika
 import PyPDF2
-tika.initVM()
 from pdf2image import convert_from_path
 from PIL import Image
 from Processor import KeywordProcessor
 import nl_core_news_lg as nl_nlp
 from tqdm import tqdm
 import zipfile
-from tika import parser
 from odf import text, teletype
 from odf.opendocument import load
+import tika
+from tika import parser
+tika.initVM()
 
 
 class PrivacyFilter:
@@ -255,7 +255,7 @@ def filter_image(files_passed, input_file_path, output_file_path):
 
 
 def filter_word(files_passed, input_file_path, output_file_path):
-    '''This function extracts text from doc of docx files using Tika and 
+    '''This function extracts text from doc and docx files using Tika and 
     subsequently de-identifies the text. De-identified text is saved in a txt file. 
     If the document was not processed, for example because it was
     secured with a password, the filename was added to the list files_passed.
@@ -296,7 +296,7 @@ def filter_odt(files_passed, input_file_path, output_file_path):
 
 
 def filter_txt(files_passed, input_file_path, output_file_path):
-    '''This function extracts text from odt files and 
+    '''This function extracts text from text files and 
     subsequently de-identifies the text. De-identified text is saved in a txt file. 
     If the document was not processed, for example because it was
     secured with a password, the filename was added to the list files_passed.'''
@@ -359,13 +359,13 @@ def process_file(file_path_count, file_path, output_path, files_passed, progress
 
 def main():
     # Uncomment for de-identifying GHZ (ID-adults) data
-    folder_path = '/GHZ'   # Pad naar de GHZ data
-    output_path = '/GHZ_a'    # Let op: er moet een mapje 'GHZ_a' zijn aangemaakt
+    folder_path = '/GHZ'
+    output_path = '/GHZ_a'
     files_passed_txt = open('files_passed.txt', 'w')
 
     # Uncomment for de-identifying VVT (ID-adults) data
-    # folder_path = '/VVT'    # Pad naar de VVT data
-    # output_path = '/VVT_a'    # Let op: er moet een mapje 'VVT_a' zijn aangemaakt
+    # folder_path = '/VVT'
+    # output_path = '/VVT_a'
     # files_passed_txt = open('files_passed.txt', 'w')
 
     # Extract files from zip files
@@ -388,7 +388,7 @@ def main():
         files_passed, progress_bar = process_file(file_path_count, file_path, output_path, files_passed, progress_bar)
     progress_bar.close()
 
-    # Write unprocessed to files_passed
+    # Write unprocessed files to files_passed
     for file in files_passed:
         files_passed_txt.write(file+"\n")
     files_passed_txt.close()

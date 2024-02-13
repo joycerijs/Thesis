@@ -1,22 +1,21 @@
 '''This file contains the functions developed for calculating statistics and training and evaluating 
 machine learning models.'''
 
+import pandas as pd
+import numpy as np
 import re
 import os
-import pandas as pd
+import nltk
+from statistics import mean
 from sklearn import metrics
 from sklearn.metrics import confusion_matrix
-from statistics import mean
-import numpy as np
 from scipy import stats
-from sklearn.metrics import confusion_matrix
 from scipy.stats import chi2_contingency
 from scipy.stats import mannwhitneyu
+from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import learning_curve
 from sklearn.metrics import RocCurveDisplay
 import matplotlib.pyplot as plt
-import math
-import nltk
 
 
 def baseline(baseline_VVT, baseline_GHZ, baseline_combined):
@@ -67,7 +66,7 @@ def characteristics_text(input_directory):
             tokens = [word for sent in nltk.sent_tokenize(text) for word in nltk.word_tokenize(sent)]
             filtered_tokens = []
 
-            # Filter out any tokens not containing letters (e.g., numeric tokens, raw punctuation)
+            # Filter out any tokens not containing letters
             for token in tokens:
                 if re.fullmatch('[a-zA-Z]+', token):
                     filtered_tokens.append(token)
@@ -146,12 +145,9 @@ def cross_val_stat(cv_dataframe, labels, cv, dict, feature_type):
     return result_dataframe
 
 
-def pipeline_model(train_data, train_label, test_data, test_label, i, clf, tprs, aucs, tns, tps, fps, fns, spec, sens, accuracy, axis,
-                   filename='model.sav'):
+def pipeline_model(train_data, train_label, test_data, test_label, i, clf, tprs, aucs, tns, tps, fps, fns, spec, sens, accuracy, axis):
     '''In this function, a ML model is trained and tested. Scoring metrics are returned and appended every fold.'''
     clf.fit(train_data, train_label)
-    # Uncomment to save model
-    # pickle.dump(clf, open(filename, 'wb'))
     predicted = clf.predict(test_data)
 
     # Plot ROC-curve per fold
@@ -194,11 +190,10 @@ def mean_ROC_curves(tprs, aucs, axis):
     return
 
 
-def calculate_lc(clf, train_data, train_label, cv=None,
-                        n_jobs=None, train_sizes=np.linspace(.01, 1.0, 20)):
+def calculate_lc(clf, train_data, train_label, train_sizes=np.linspace(.01, 1.0, 20)):
     '''In this function, a learning curve of an estimator is created.'''
     train_sizes, train_scores, test_scores = \
-    learning_curve(clf, train_data, train_label, cv=None, n_jobs=n_jobs,
+    learning_curve(clf, train_data, train_label, cv=None, n_jobs=None,
                        train_sizes=train_sizes)
     train_scores_mean = np.mean(train_scores, axis=1)
     test_scores_mean = np.mean(test_scores, axis=1)

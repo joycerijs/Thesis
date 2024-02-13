@@ -1,8 +1,8 @@
 '''This script was used to preprocess client names added to the first and last names lists. 
 Accents were removed and names were split at interpunction.'''
 
-import unicodedata
 import pandas as pd
+import unicodedata
 
 
 def remove_accents(text):
@@ -45,6 +45,13 @@ def lastnames_processing(df):
     split_names_df = pd.DataFrame(split_names, columns=['achternaam'])
     split_names_df.to_csv('lastnames_corrected.csv', index=False)
 
-df_lastnames = pd.read_csv(r'/lastnames.csv', encoding='latin-1')
-df_firstnames = pd.read_csv(r'/firstnames.csv', encoding='latin-1')
-firstnames_processing(df_firstnames)
+
+def main():
+    df_lastnames = pd.read_csv(r'/lastnames.csv', encoding='latin-1')
+    df_firstnames = pd.read_csv(r'/firstnames.csv', encoding='latin-1')
+    firstnames_processing(df_firstnames)
+    lastnames_processing(df_lastnames)
+
+
+if __name__ == "__main__":
+    main()
