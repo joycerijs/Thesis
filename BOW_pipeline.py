@@ -257,7 +257,7 @@ def main():
         train_label = cv_unbiased_stem['Label'].iloc[train_index]
         test_label = cv_unbiased_stem['Label'].iloc[test_index]
 
-        clf_XGB = GradientBoostingClassifier(random_state=42)
+        clf_XGB = GradientBoostingClassifier(min_samples_split=10, min_samples_leaf=5, max_depth=3, random_state=42)
         tprs, aucs, tns, tps, fps, fns, spec, sens, accuracy = \
             pipeline_model(train_data, train_label, test_data, test_label, i, clf_XGB, tprs, aucs, tns, tps, fps, fns,
                             spec, sens, accuracy, axis)
