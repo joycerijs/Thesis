@@ -363,7 +363,7 @@ def main():
     output_path = '/GHZ_a'
     files_passed_txt = open('files_passed.txt', 'w')
 
-    # Uncomment for de-identifying VVT (ID-adults) data
+    # Uncomment for de-identifying VVT (non-ID adults) data
     # folder_path = '/VVT'
     # output_path = '/VVT_a'
     # files_passed_txt = open('files_passed.txt', 'w')
